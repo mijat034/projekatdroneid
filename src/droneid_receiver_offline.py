@@ -25,7 +25,7 @@ def main(_args):
     for i in range(chunks):
         print("Drone-ID Frame Detection")
 
-        capture = SpectrumCapture(raw[i*chunk_samples:(i+1)*chunk_samples], skip_detection = args.skip_detection, Fs=_args.sample_rate, debug=args.debug, legacy=args.legacy)
+        capture = SpectrumCapture(raw[i*chunk_samples:(i+1)*chunk_samples], skip_detection = args.skip_detection, Fs=_args.sample_rate, legacy=args.legacy)
         print(f"Found {len(capture.packets)} Drone-ID RF frames in spectrum capture.")
 
         for packet_num, _ in enumerate(capture.packets):
@@ -37,7 +37,7 @@ def main(_args):
             packet_data = capture.get_packet_samples(pktnum=packet_num)
 
             try:
-                packet = Packet(packet_data, debug=args.debug, enable_zc_detection=not args.disable_zc_detection, legacy=args.legacy)
+                packet = Packet(packet_data, enable_zc_detection=not args.disable_zc_detection, legacy=args.legacy)
             except Exception as error:
                 print(f"Demodulation FAILED (Frame {packet_num+1}): {error}")
                 continue
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input-file', default="../samples/mini2_sm", help="Binary Sample Input")
     parser.add_argument('-s', '--sample-rate', default="50e6", type=float, help="Sample Rate")
     parser.add_argument('-l', '--legacy', default=False, action="store_true", help="Support of legacy drones (Mavic Pro, Mavic 2)")
-    parser.add_argument('-d', '--debug', default=False, action="store_true", help="Enable debug output")
+    
     parser.add_argument('-z', '--disable-zc-detection', default=True, action="store_false", help="Disable per-symbol ZC sequence detection (faster)")
     parser.add_argument('-f', '--skip-detection', default=False, action="store_true", help="Skip packet detection and enforce decoding of input file")
     args = parser.parse_args()

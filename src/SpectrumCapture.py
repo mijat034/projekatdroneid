@@ -1,4 +1,4 @@
-from distutils.log import debug
+
 import numpy as np
 import matplotlib.pyplot as plt
 from packetizer import find_packet_candidate_time
@@ -9,13 +9,13 @@ class SpectrumCapture:
     raw_data: np.array
     sampling_rate: float
     packets: list
-    debug: bool
+    
 
-    def __init__(self, raw_data=None, skip_detection=False, Fs=50e6, debug=False, p_type = "droneid", legacy = False):
+    def __init__(self, raw_data=None, skip_detection=False, Fs=50e6, p_type = "droneid", legacy = False):
         """Read capture from file"""
         self.legacy = legacy
         self.raw_data = raw_data
-        self.debug = debug
+
         self.sampling_rate = Fs
         self.packet_type = p_type
         if skip_detection:
@@ -23,31 +23,25 @@ class SpectrumCapture:
         else:
             self._packetize_coarse()
 
-        if debug:
-            print(f"SpectrumCapture: found {len(self.packets)} packets")
+        
 
     def _packetize_coarse(self):
         """Packetize input data"""
         droneid_found = False
 
-        self.packets, cfo = find_packet_candidate_time(self.raw_data, self.sampling_rate, debug = self.debug, packet_type=self.packet_type, legacy = self.legacy)
+        self.packets, cfo = find_packet_candidate_time(self.raw_data, self.sampling_rate,  packet_type=self.packet_type, legacy = self.legacy)
 
-        if self.debug:
-            # show all packets found
-            for p in self.packets:
-                plt.specgram(p,Fs=self.sampling_rate)
-                plt.show()
+        
 
         if len(self.packets) > 0:
             droneid_found = True
 
-        if not droneid_found:
-            if self.debug:
-                print("Could not verify DroneID packet!")
+        
+            
 
         #self.packets = droneid_pkt
 
-    def get_packet_samples(self, pktnum=0, debug=False):
+    def get_packet_samples(self, pktnum=0):
         """Return a Drone ID frame with center frequency corrected and resampled to 15.36 MHz."""
         if pktnum >= len(self.packets):
             raise ValueError("Only %i packets available but you requested packet %i" % (len(self.packets), pktnum))
@@ -69,17 +63,10 @@ class SpectrumCapture:
 
         # resample to LTE freq
         if self.sampling_rate > resample_rate + .1e6:
-            if debug:
-                print("Resampling from %i MHz to %f MHz" % ((self.sampling_rate / 1e6),resample_rate))
+            
             packet_data = resample(packet_data, self.sampling_rate, resample_rate)
         elif self.sampling_rate < resample_rate - .1e6:
             raise ValueError("Your sampling rate is too low")
-        else:
-            if debug:
-                print("Sampling rate matches, not resampling.")
         
-        if self.debug:
-            plt.specgram(packet_data, Fs=self.sampling_rate)
-            plt.show()
         
         return packet_data
